@@ -1,0 +1,108 @@
+version: "3"
+
+networks:
+  uas:
+    external: true
+
+services:
+  auth-uas:
+    image: auth
+    hostname: auth
+    container_name: auth-uas
+    command: make start
+    build:
+      context: ../authentification
+      dockerfile: Dockerfile
+    ports:
+      - 40021:40000
+    volumes:
+      - type: bind
+        source: ../authentification
+        target: /home/app
+      - type: bind
+        source: ../authentification/db/migrations
+        target: /home/app/migrations
+    working_dir: /home/app
+    environment:
+      DB_NAME: auth
+      DB_USER: asd
+      DB_PW:
+    networks:
+      - uas
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=Path(`/auth`) || PathPrefix(`/auth/`)"
+      - "traefik.http.routers.auth.priority=200"
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.tls=true"
+      - "traefik.http.routers.auth.tls.certresolver=myresolver"
+      - "traefik.http.services.auth.loadbalancer.server.port=5050"
+    restart: always
+    
+  todo-uas:
+    image: todo
+    hostname: todo
+    container_name: todo-uas
+    command: make start
+    build:
+      context: ../todo
+      dockerfile: Dockerfile
+    ports:
+      - 40022:40000
+    volumes:
+      - type: bind
+        source: ../todo
+        target: /home/app
+      - type: bind
+        source: ../todo/db/migrations
+        target: /home/app/migrations
+    working_dir: /home/app
+    environment:
+      DB_NAME: todo
+      DB_USER: asd
+      DB_PW:
+    networks:
+      - uas
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.todo.rule=Path(`/todo`) || PathPrefix(`/todo/`)"
+      - "traefik.http.routers.todo.priority=200"
+      - "traefik.http.routers.todo.entrypoints=websecure"
+      - "traefik.http.routers.todo.tls=true"
+      - "traefik.http.routers.todo.tls.certresolver=myresolver"
+      - "traefik.http.services.todo.loadbalancer.server.port=5050"
+    restart: always
+    
+  user-uas:
+    image: user
+    hostname: user
+    container_name: user-uas
+    command: make start
+    build:
+      context: ../user
+      dockerfile: Dockerfile
+    ports:
+      - 40023:40000
+    volumes:
+      - type: bind
+        source: ../user
+        target: /home/app
+      - type: bind
+        source: ../user/db/migrations
+        target: /home/app/migrations
+    working_dir: /home/app
+    environment:
+      DB_NAME: user
+      DB_USER: asd
+      DB_PW:
+    networks:
+      - uas
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user.rule=Path(`/user`) || PathPrefix(`/user/`)"
+      - "traefik.http.routers.user.priority=200"
+      - "traefik.http.routers.user.entrypoints=websecure"
+      - "traefik.http.routers.user.tls=true"
+      - "traefik.http.routers.user.tls.certresolver=myresolver"
+      - "traefik.http.services.user.loadbalancer.server.port=5050"
+    restart: always
