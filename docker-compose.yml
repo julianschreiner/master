@@ -5,28 +5,47 @@ networks:
     external: true
 
 services:
+  db-uas:
+    image: mysql:8.0
+    container_name: db-uas
+    command: --sql_mode=""
+    ports:
+      - 3307:3306
+    volumes:
+      - ./initDb:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: 3GkB8VL0lJaKApDP
+    networks:
+      - uas
+    labels:
+      - traefik.enable=false
+    restart: always
   auth-uas:
     image: auth
     hostname: auth
     container_name: auth-uas
     command: make start
     build:
-      context: ../authentification
+      context: ../authentication
       dockerfile: Dockerfile
     ports:
       - 40021:40000
     volumes:
       - type: bind
-        source: ../authentification
+        source: ../authentication
         target: /home/app
       - type: bind
-        source: ../authentification/db/migrations
+        source: ../authentication/db/migrations
         target: /home/app/migrations
     working_dir: /home/app
     environment:
+      JWT_PRIVATE: 6a935e6baca5757a3b77a2fe747a71b9466951e0b555448413547d656042ed9acf63526baaad8e75cf13821ecba4881ca42a4366d8f2e3a08d49fb567ea1da57
+      JWT_PUBLIC: cf63526baaad8e75cf13821ecba4881ca42a4366d8f2e3a08d49fb567ea1da57
+      JWT_REFRESH: wuVXMq19t7UssgA46yOyPnH8BpVEONcasPen4uV9BRhEHQeckP
       DB_NAME: auth
-      DB_USER: asd
-      DB_PW:
+      DB_USER: auth
+      DB_SECRET: 3GkB8VL0lJaKApDP
+      DB_HOST: db-uas
     networks:
       - uas
     labels:
@@ -38,7 +57,6 @@ services:
       - "traefik.http.routers.auth.tls.certresolver=myresolver"
       - "traefik.http.services.auth.loadbalancer.server.port=5050"
     restart: always
-    
   todo-uas:
     image: todo
     hostname: todo
@@ -59,8 +77,9 @@ services:
     working_dir: /home/app
     environment:
       DB_NAME: todo
-      DB_USER: asd
-      DB_PW:
+      DB_USER: todo
+      DB_SECRET: 3GkB8VL0lJaKApDP
+      DB_HOST: db-uas
     networks:
       - uas
     labels:
@@ -72,7 +91,6 @@ services:
       - "traefik.http.routers.todo.tls.certresolver=myresolver"
       - "traefik.http.services.todo.loadbalancer.server.port=5050"
     restart: always
-    
   user-uas:
     image: user
     hostname: user
@@ -93,8 +111,9 @@ services:
     working_dir: /home/app
     environment:
       DB_NAME: user
-      DB_USER: asd
-      DB_PW:
+      DB_USER: user
+      DB_SECRET: 3GkB8VL0lJaKApDP
+      DB_HOST: db-uas
     networks:
       - uas
     labels:
