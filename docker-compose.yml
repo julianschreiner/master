@@ -30,6 +30,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 40021:40000
+      - 40051:5050
     volumes:
       - type: bind
         source: ../authentication
@@ -49,12 +50,15 @@ services:
     networks:
       - uas
     labels:
+      # This is enableing treafik to proxy this service
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=Path(`/auth`) || PathPrefix(`/auth/`)"
-      - "traefik.http.routers.auth.priority=200"
-      - "traefik.http.routers.auth.entrypoints=websecure"
-      - "traefik.http.routers.auth.tls=true"
-      - "traefik.http.routers.auth.tls.certresolver=myresolver"
+      # Here we have to define the URL
+      - "traefik.http.routers.auth.rule=Host(`local.thesis.de/auth`)"
+      # Here we are defining wich entrypoint should be used by clients to access this service
+      - "traefik.http.routers.auth.entrypoints=web"
+      # Here we define in wich network treafik can find this service
+      - "traefik.docker.network=web"
+      # This is the port that traefik should proxy
       - "traefik.http.services.auth.loadbalancer.server.port=5050"
     restart: always
   todo-uas:
@@ -66,7 +70,8 @@ services:
       context: ../todo
       dockerfile: Dockerfile
     ports:
-      - 40022:40000
+      - 40022:40000 #debug
+      - 40052:5050 #http
     volumes:
       - type: bind
         source: ../todo
@@ -83,12 +88,15 @@ services:
     networks:
       - uas
     labels:
+      # This is enableing treafik to proxy this service
       - "traefik.enable=true"
-      - "traefik.http.routers.todo.rule=Path(`/todo`) || PathPrefix(`/todo/`)"
-      - "traefik.http.routers.todo.priority=200"
-      - "traefik.http.routers.todo.entrypoints=websecure"
-      - "traefik.http.routers.todo.tls=true"
-      - "traefik.http.routers.todo.tls.certresolver=myresolver"
+      # Here we have to define the URL
+      - "traefik.http.routers.todo.rule=Host(`local.thesis.de/todo`)"
+      # Here we are defining wich entrypoint should be used by clients to access this service
+      - "traefik.http.routers.todo.entrypoints=web"
+      # Here we define in wich network treafik can find this service
+      - "traefik.docker.network=web"
+      # This is the port that traefik should proxy
       - "traefik.http.services.todo.loadbalancer.server.port=5050"
     restart: always
   user-uas:
@@ -100,7 +108,8 @@ services:
       context: ../user
       dockerfile: Dockerfile
     ports:
-      - 40023:40000
+      - 40023:40000 #debug
+      - 40053:5050 #http
     volumes:
       - type: bind
         source: ../user
@@ -117,11 +126,30 @@ services:
     networks:
       - uas
     labels:
+      # This is enableing treafik to proxy this service
       - "traefik.enable=true"
-      - "traefik.http.routers.user.rule=Path(`/user`) || PathPrefix(`/user/`)"
-      - "traefik.http.routers.user.priority=200"
-      - "traefik.http.routers.user.entrypoints=websecure"
-      - "traefik.http.routers.user.tls=true"
-      - "traefik.http.routers.user.tls.certresolver=myresolver"
+      # Here we have to define the URL
+      - "traefik.http.routers.user.rule=Host(`local.thesis.de/user`)"
+      # Here we are defining wich entrypoint should be used by clients to access this service
+      - "traefik.http.routers.user.entrypoints=web"
+      # Here we define in wich network treafik can find this service
+      - "traefik.docker.network=web"
+      # This is the port that traefik should proxy
       - "traefik.http.services.user.loadbalancer.server.port=5050"
     restart: always
+  traefik:
+    image: traefik:v2.3
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    restart: always
+    ports:
+      - "80:80"
+      - "8080:8080" # The Web UI (enabled by --api)
+    networks:
+      - uas
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
