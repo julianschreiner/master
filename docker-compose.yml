@@ -39,6 +39,8 @@ services:
         source: ../authentication/db/migrations
         target: /home/app/migrations
     working_dir: /home/app
+    depends_on:
+      - db-uas
     environment:
       JWT_PRIVATE: 6a935e6baca5757a3b77a2fe747a71b9466951e0b555448413547d656042ed9acf63526baaad8e75cf13821ecba4881ca42a4366d8f2e3a08d49fb567ea1da57
       JWT_PUBLIC: cf63526baaad8e75cf13821ecba4881ca42a4366d8f2e3a08d49fb567ea1da57
@@ -80,6 +82,8 @@ services:
         source: ../todo/db/migrations
         target: /home/app/migrations
     working_dir: /home/app
+    depends_on:
+      - db-uas
     environment:
       DB_NAME: todo
       DB_USER: todo
@@ -118,6 +122,8 @@ services:
         source: ../user/db/migrations
         target: /home/app/migrations
     working_dir: /home/app
+    depends_on:
+      - db-uas
     environment:
       DB_NAME: user
       DB_USER: user
